@@ -1,0 +1,10 @@
+import numpy as np
+from main_window import *
+
+def showKspace(self,data):
+    self.ui.kspace.canvas.ax.clear()
+    self.ui.kspace.canvas.ax.imshow(np.abs(data))
+    self.ui.kspace.canvas.draw()
+
+def showKphase(self,data):
+    self.ui.kspacePhase.

@@ -1,0 +1,12 @@
+syntax: glob
+__pycache__/ColorMap.cpython-33.pyc
+__pycache__/startCMPUI.cpython-33.pyc
+__pycache__/mr_magic.cpython-33.pyc
+__pycache__/mplwidgetsimple.cpython-33.pyc
+__pycache__/mplwidget.cpython-33.pyc
+__pycache__/main_window.cpython-33.pyc
+__pycache__/filters.cpython-33.pyc
+__pycache__/filter_config_class.cpython-33.pyc
+__pycache__/filter_config.cpython-33.pyc
+__pycache__/contrast.cpython-33.pyc
+__pycache__/color_maps.cpython-33.pyc
