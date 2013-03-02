@@ -1,6 +1,13 @@
 """
 A widget for PyQt4 that displays images using Matplotlib
 
+:class:`mplwidget.startColorMapUi`
+    Brings up a dialog to select the plots colormap.
+
+:py:class:`mplwidget.mplCanvas`
+    A Qt4 widget used to embed a matplotlib plot in a GUI. Specifically
+    designed for use with image data.
+    
 """
 from PyQt4 import QtGui, QtCore
 import numpy as np
@@ -19,7 +26,8 @@ class startColorMapUi(QtGui.QDialog, Ui_CMapDialog):
     Class for the color map selector UI. It displays a combo box of all
     available maps, shows the current map as a color bar, and has accept/reject
     buttons.
-
+    
+    .. warning:: This is not intended to be used outside of the mplCanvas
     """
     returnData = QtCore.pyqtSignal(str)
     def __init__(self, CMap='gray', parent=None):
@@ -44,7 +52,7 @@ class startColorMapUi(QtGui.QDialog, Ui_CMapDialog):
 
     @QtCore.pyqtSlot()
     def _drawBar(self):
-        """ Draw a bar that shows the current colormap. """
+        """ QT slot that draws a bar showing the current colormap. """
         colors = np.outer(np.arange(0, 1, 0.01), np.ones(20)).T
         index = self.ComboBox.currentIndex()
         self.CMap = self.maps[index]
@@ -56,12 +64,17 @@ class startColorMapUi(QtGui.QDialog, Ui_CMapDialog):
 
     @QtCore.pyqtSlot()
     def _dataCarrier(self):
-        """ Sends a signal with the selected colormap. """
+        """ QT slot that sends a QT signal with the selected colormap. """
         self.returnData.emit(self.CMap)
 
 
 class _startContrastUI(QtGui.QDialog, Ui_ContrastSettings):
-    """ popup window for adjusting contrast """
+    """ 
+    Popup window for adjusting contrast
+    
+    .. warning:: This is not intended to be used outside of hte mplConavas
+    
+    """
     def __init__(self, Parent=None):
         QtGui.QDialog.__init__(self, Parent)
         self.setupUi(self)
@@ -85,7 +98,6 @@ class mplCanvas(FigureCanvasQTAgg):
     needed to show the image and mark it up.
 
     """
-    circles = []
     # Signal to emit when clearing marks. Has to be here, not sure why?
     clearMarks = QtCore.pyqtSignal()
     setMark = QtCore.pyqtSignal(mpl.backend_bases.MouseEvent, tuple, tuple)
@@ -93,7 +105,8 @@ class mplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, Maskable=False):
         QtCore.QObject.__init__(self)
-        # Member elements
+        # Member elements for storing image formatting parameters
+        self.circles = []
         self.cadj = lambda x: x
         self.filterstack = []
         self.CMap = 'gray'
@@ -117,6 +130,50 @@ class mplCanvas(FigureCanvasQTAgg):
 
         self.fig.canvas.mpl_connect('button_press_event', self._plotClick)
 
+    def addMarker(self, Coord):
+        """ Draws a small circle at the supplied data coordinates """
+        for circ in self.circles:
+            circ.remove()
+            self.circles.pop()
+
+        self.circles.append(pch.Circle(Coord,
+                                       radius=1,
+                                       lw=0.25,
+                                       ec='yellow',
+                                       fc='none'))
+
+        self.ax.add_patch(self.circles[-1])
+        self.draw()
+
+    def clearMarkers(self):
+        """ Removes the markers from the canvas and from the class """
+        for circ in self.circles:
+            circ.remove()
+            self.circles.pop()
+        self.draw()     
+
+    def _cMapPicker(self):
+        """ Start the UI to select a colormap for the display. """
+        self.subwindow = startColorMapUi(self.CMap)
+        self.subwindow.returnData.connect(self.setCMap)
+        if self.subwindow.exec_():  # on exit, set the new color maps
+            return
+
+    @QtCore.pyqtSlot()
+    def _contrastSlot(self):
+        """ Control function for changing the contrast."""
+        if self.subwindow.radioGamma.isChecked():
+            # Lambda function that corrisponds to a gamma transform
+            self.cadj = lambda x:\
+                x**(self.subwindow.gammaSldr.value()/10.0)
+        elif self.subwindow.radioLog.isChecked():
+            # Lambda function for a log transform
+            self.cadj = lambda x: np.log10(1.0+x)
+        else:
+            # Lambda function for no contrast adjustment
+            self.cadj = lambda x: x
+        self.imshow()
+        
     def contextMenuEvent(self, Event):
         """ Construct a context menu for adjusting the widget. """
         menu = QtGui.QMenu(self)
@@ -151,11 +208,51 @@ class mplCanvas(FigureCanvasQTAgg):
 
     def imshow(self, Data=None, CMap=None, Aspect=None, Mask=None,
                MinMax=None):
-        """ Shows the data supplied, maintining the aspect ratio. """
+        """
+        Shows the data supplied, maintining the aspect ratio.
+        
+        **Args:**
+            - Data (array): the image to be shown
+            - CMap (str): name of the mpl colormap to be used
+            - Aspect (float): aspect ratio of the image
+            - Mask (array): binary array used to mask the image
+            - MinMax (tuple): minimum and maximum values for windowing the 
+                image
+        
+        **Argument Behaviours**
+        Arguments that are not supplied default to None.
+        
+        *Data:* If a Data matrix is not supplied, then the last shown image
+        (stored in self.data) will be used. If self.data == None, and new Data
+        has not been supplied, then the function will return. If new Data is
+        supplied, then it is stored in self.data.
+        
+        *CMap:* If a colormap name is not supplied, then the currently stored
+        colormap is used. If a colormap is supplied, then it is stored in the
+        class member CMap.
+        
+        *Aspect:* If no aspect ratio is supplied and no previous value was
+        stored, then the ratio is guess from the resolution. If a previous
+        value was set, then it is used. If a value is supplied, then is stored
+        in the class member aspectRatio. 
+        
+        *Mask:* If a binary mask is not supplied, then the previous mask is
+        used. If it is supplied, then the mask is stored in the class member
+        mask.
+        
+        *MinMax:* If a tuple of two elements is not supplied, then the class
+        member minMax is used to set the display range. If no min or max has 
+        been supplied the the plot will autorange. If a tuple is given the it
+        will be stored in the class member minMax.
+
+        .. seealso:: :meth:`refresh` to quickly refresh the image display
+        """
         configs = {}
 
         if Data is not None:
-            self.data = Data
+            self.data = Data.T
+        elif self.data is None:
+            return
 
         if CMap is not None:
             self.CMap = CMap
@@ -194,56 +291,62 @@ class mplCanvas(FigureCanvasQTAgg):
         self.ax.set_position([0, 0, 1, 1])
         self.refresh()
 
-    def addMarker(self, Coord):
-        """ Draws a small circle at the supplied data coordinates """
-        for circ in self.circles:
-            circ.remove()
-            self.circles.pop()
+    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(int)
+    def _minMaxSlot(self, State=2):
+        """ 
+        QT slot to set the display limits for the image.
+        
+        **Args:**
+            State(int): Indicates if the min/max values should be updated
+            or removed. The call signature of the slot is overloaded so 
+            that the connected signal may include either the integer (a 
+            value of 2 clears minMax, 0 updates with the spinbox values) or 
+            no data, in which case minMax is cleared.
 
-        self.circles.append(pch.Circle(Coord,
-                                       radius=1,
-                                       lw=0.25,
-                                       ec='yellow',
-                                       fc='none'))
-
-        self.ax.add_patch(self.circles[-1])
-        self.draw()
-
-    def toggleCBar(self):
-        """ Turn on and off the color bar for the plot. """
-        if self.im and self.cbar is None:
-            self.cbar = self.fig.colorbar(self.im)
-            self.refresh()
-        elif self.im:
-            #ugly hack to rebuild the plot correctly
-            self.fig.clear()
-            self.cbar = None
-            self.ax = self.fig.add_subplot(111, aspect='equal')
-            self.ax.set_axis_off()
-            self.imshow()
+        .. seealso::
+            :meth:`setMinMax` which does that actual work of setting 
+            the minMax value.
+            
+            :meth:`removeMinMax` which is used to clear the value
+            
+        .. todo:: Change this to send the values via the signal.
+        
+        """
+        if State == 0:
+            self.setMinMax(self.subwindow.minSB.value(),
+                           self.subwindow.maxSB.value())
+        elif State == 2:
+            self.removeMinMax()
 
     def refresh(self):
-        """ Redraws any markers that are in the list. """
+        """      
+        Redraws any markers that are in the list.
+        
+        """
         for circ in self.ax.findobj(match=pch.Circle):
             circ.remove()
         for circ in self.circles:
             self.ax.add_patch(circ)
         self.draw()
 
+    def removeMask(self):
+        """ Convenience function to unmask the image. """
+        self.mask = None
+        self.imshow()
+        
+    def removeMinMax(self):
+        """ Convenience function to set the image to autorange. """
+        self.minMax = None
+        self.imshow()
+ 
     def setCMap(self, CMap='gray'):
         """ Set the colormap for the image"""
         self.CMap = CMap
         if self.im is not None:
             self.im.set_cmap(CMap)
         self.refresh()
-
-    def _cMapPicker(self):
-        """ Start the UI to select a colormap for the display. """
-        self.subwindow = startColorMapUi(self.CMap)
-        self.subwindow.returnData.connect(self.setCMap)
-        if self.subwindow.exec_():  # on exit, set the new color maps
-            return
-
+        
     def setContrast(self):
         """ Change the contrast function for the plot. """
         self.subwindow = _startContrastUI()
@@ -260,45 +363,20 @@ class mplCanvas(FigureCanvasQTAgg):
         self.subwindow.autoRange.stateChanged.connect(self._minMaxSlot)
         if self.subwindow.exec_():
             return
-
-    @QtCore.pyqtSlot()
-    def _contrastSlot(self):
-        """ Control function for changing the contrast."""
-        if self.subwindow.radioGamma.isChecked():
-            # Lambda function that corrisponds to a gamma transform
-            self.cadj = lambda x:\
-                x**(self.subwindow.gammaSldr.value()/10.0)
-        elif self.subwindow.radioLog.isChecked():
-            # Lambda function for a log transform
-            self.cadj = lambda x: np.log10(1.0+x)
-        else:
-            # Lambda function for no contrast adjustment
-            self.cadj = lambda x: x
-        self.imshow()
-
-    @QtCore.pyqtSlot()
-    @QtCore.pyqtSlot(int)
-    def _minMaxSlot(self, state=0):
-        """ Callback to set the display limits for the image"""
-        if state == 0:
-            self.setMinMax(self.subwindow.minSB.value(),
-                           self.subwindow.maxSB.value())
-        elif state == 2:
-            self.removeMinMax()
-
+            
     def setMinMax(self, Min, Max):
         """ Set the display limits for the image"""
         self.minMax = (Min, Max)
         self.im.set_clim(Min, Max)
         self.draw()
 
-    def removeMinMax(self):
-        """ Convenience function to set the image to autorange. """
-        self.minMax = None
-        self.imshow()
-
     def _plotClick(self, Event):
-        """ Matplotlib click handling to place markers on plots"""
+        """ Matplotlib click handling to place markers on plots
+        
+        .. todo:: This is fairly restrictive, probably need to generalize to
+            make it possible to SNR boxes, more marks, distance measures, etc.
+        
+        """
         if Event.button != 1:
             return
         # TODO: Figure out if this means I've reversed indexing somewhere.
@@ -313,21 +391,26 @@ class mplCanvas(FigureCanvasQTAgg):
         self.mask = Mask
         self.imshow()
 
-    def removeMask(self):
-        """ Convenience function to unmask the image. """
-        self.mask = None
-        self.imshow()
-
-    def clearMarkers(self):
-        """ Removes the markers from the canvas and from the class """
-        for circ in self.circles:
-            circ.remove()
-            self.circles.pop()
-        self.draw()
-
     def saveImage(self):
-        """ Save the image being shown to a file. """
+        """ Save the image being shown to a file.
+        
+        .. todo:: Fix the file type list, it's not what I really want.
+        
+        """
         self.subwindow = QtGui.QFileDialog()
         svf = self.subwindow.getSaveFileName(self, "Save Image", "C:/",
                                              "Images (*.png *.jpg)")
         self.fig.savefig(svf, bbox_inches='tight', pad_inches=0)
+        
+    def toggleCBar(self):
+        """ Turn on and off the color bar for the plot. """
+        if self.im and self.cbar is None:
+            self.cbar = self.fig.colorbar(self.im)
+            self.refresh()
+        elif self.im:
+            #ugly hack to rebuild the plot correctly
+            self.fig.clear()
+            self.cbar = None
+            self.ax = self.fig.add_subplot(111, aspect='equal')
+            self.ax.set_axis_off()
+            self.imshow()

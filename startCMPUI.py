@@ -1,12 +1,17 @@
-
+"""
+Starts the main colormap configuration UI
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 from PyQt4 import QtGui
+
 from color_maps import Ui_ColorMapsDialog
 
 
 class startCMPUI(QtGui.QDialog, Ui_ColorMapsDialog):
-    #popup window for defining the color maps
+    """
+    popup window for defining the color maps
+    """
 
     def __init__(self, cmaps, parent=None):
         QtGui.QDialog.__init__(self, parent)
@@ -41,6 +46,7 @@ class startCMPUI(QtGui.QDialog, Ui_ColorMapsDialog):
 
     #these functions regenerate the color bars with the current map
     def drawBarM(self):
+        """ Draws the color bar for the magnitude image colormap"""
         a = np.outer(np.arange(0, 1, 0.01), np.ones(20)).T
         index = self.MComboBox.currentIndex()
         self.CMaps['mag'] = self.maps[index]
@@ -49,6 +55,7 @@ class startCMPUI(QtGui.QDialog, Ui_ColorMapsDialog):
         self.Mcolorbar.draw()
 
     def drawBarP(self):
+        """ Draws the color bar for the phase image colormap"""
         a = np.outer(np.arange(0, 1, 0.01), np.ones(20)).T
         index = self.PComboBox.currentIndex()
         self.CMaps['phase'] = self.maps[index]
@@ -57,6 +64,7 @@ class startCMPUI(QtGui.QDialog, Ui_ColorMapsDialog):
         self.Pcolorbar.draw()
 
     def drawBarK(self):
+        """ Draws the color bar for the kspace image colormap"""
         a = np.outer(np.arange(0, 1, 0.01), np.ones(20)).T
         index = self.KComboBox.currentIndex()
         self.CMaps['kspace'] = self.maps[index]
@@ -65,6 +73,7 @@ class startCMPUI(QtGui.QDialog, Ui_ColorMapsDialog):
         self.Kcolorbar.draw()
 
     def drawBarKP(self):
+        """ Draws the color bar for the kspace phase image colormap"""
         a = np.outer(np.arange(0, 1, 0.01), np.ones(20)).T
         index = self.KPComboBox.currentIndex()
         self.CMaps['kphase'] = self.maps[index]

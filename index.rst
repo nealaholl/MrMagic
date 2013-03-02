@@ -5,25 +5,29 @@
 
 Welcome to MR_Magic's documentation!
 ====================================
-Intro:
+**Overview:**
+	Import, display, and manipulate MRI images. Currently only supports 2D
+	data from the Varian in the FID format
 
-Overview:
+**Dependencies:**
 
-Dependencies:
+* Modified nmrGlue
+* pyQT4
+* Matplotlib
+* Numpy
+* Filters
 
-
-Contents:
+Contents
+--------
 
 .. toctree::
-   :maxdepth: 2
+	:maxdepth: 2
 	
+	gettingStarted
 	code
 
-
 Indices and tables
-==================
-
+------------------
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

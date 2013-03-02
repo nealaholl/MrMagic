@@ -94,14 +94,14 @@ class FilterConfig(QtGui.QDialog, Ui_filterConfig):
             workingFilter = \
                 filt.makeLPF(Window=window,
                              Dim=self.dim,
-                             Radius=self.diameterSB.value(),
+                             Diameter=self.diameterSB.value(),
                              Outer=self.outerRB.isChecked(),
                              Cont=self.percentRB.isChecked())
         elif self.highpassRB.isChecked():
             workingFilter = \
                 filt.makeHPF(Window=window,
                              Dim=self.dim,
-                             Radius=self.diameterSB.value(),
+                             Diameter=self.diameterSB.value(),
                              Outer=self.outerRB.isChecked(),
                              Cont=self.percentRB.isChecked())
 
@@ -110,7 +110,7 @@ class FilterConfig(QtGui.QDialog, Ui_filterConfig):
                 filt.makeBSF(Window=window,
                              Dim=self.dim,
                              Radius=self.diameterSB.value(),
-                             Width=self.widthSB.value(),
+                             Diameter=self.widthSB.value(),
                              Cont=self.percentRB.isChecked())
 
         elif self.vbandstopRB.isChecked():

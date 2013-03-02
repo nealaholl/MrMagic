@@ -26,7 +26,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MR_Magic 1.0B documentation" href="index.html" /> 
+    <link rel="top" title="MR_Magic 1.0B documentation" href="index.html" />
+    <link rel="prev" title="Getting Started" href="gettingStarted.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,6 +39,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="gettingStarted.html" title="Getting Started"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">MR_Magic 1.0B documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -47,107 +51,443 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-mr_magic">
-<span id="auto-generated-documentation"></span><h1>Auto Generated Documentation<a class="headerlink" href="#module-mr_magic" title="Permalink to this headline">¶</a></h1>
-<p>Program that imports, recons, displays, filters, and does other general purpose
-funcitons to MR images.</p>
+  <div class="section" id="auto-generated-documentation">
+<h1>Auto Generated Documentation<a class="headerlink" href="#auto-generated-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-mr_magic">
+<span id="main-window-overview"></span><h2>Main Window Overview<a class="headerlink" href="#module-mr_magic" title="Permalink to this headline">¶</a></h2>
+<p>General purpose MRI image display.</p>
+<p><strong>Classes:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li>MainWindow: Core GUI element for MR Magic.</li>
+</ul>
+</div></blockquote>
+<p><strong>Dependencies:</strong></p>
+<blockquote>
+<div><p><strong>Standard modules:</strong></p>
+<ul class="simple">
+<li>numpy: Primary math and processing</li>
+<li>nmrglue: Varian FID importer, needs to be the modified version</li>
+<li>PyQt4: The GUI is built on this</li>
+</ul>
+<p><strong>Custom modules, general purpose:</strong></p>
+<ul class="simple">
+<li>filters:  Builds the various filters and masks used to process images</li>
+</ul>
+<p><strong>GUI element modules:</strong></p>
+<ul class="simple">
+<li>main_window: Machine generated class for the main windos</li>
+<li>startCMPUI: GUI for setting the colormaps of the images</li>
+<li>filter_config_class: GUI to create and manage the filter stack</li>
+</ul>
+</div></blockquote>
+<div class="section" id="main-mr-magic-todo-list">
+<h3>Main MR Magic todo List<a class="headerlink" href="#main-mr-magic-todo-list" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add procpar explorer</p>
+</div>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add GE pFile importer</p>
+</div>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add SNR comutation</p>
+</div>
+<div class="admonition-todo admonition" id="index-3">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add configuration window</p>
+</div>
+<div class="admonition-todo admonition" id="index-4">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add save configuration</p>
+</div>
+</div>
+</div>
+<div class="section" id="main-window-classes-and-member-functions">
+<h2>Main Window Classes and Member functions<a class="headerlink" href="#main-window-classes-and-member-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="mr_magic.MainWindow">
 <em class="property">class </em><tt class="descclassname">mr_magic.</tt><tt class="descname">MainWindow</tt><big>(</big><em>Parent=None</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow" title="Permalink to this definition">¶</a></dt>
-<dd><p>The main magic happens here!</p>
-<dl class="function">
+<dd><p>The primary GUI element</p>
+<dl class="method">
+<dt id="mr_magic.MainWindow.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>Parent=None</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup the main window GUI</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mr_magic.MainWindow._filtConfigure">
+<tt class="descname">_filtConfigure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow._filtConfigure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow._filtConfigure" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that opens the Filter configuration window</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mr_magic.MainWindow._openFID">
+<tt class="descname">_openFID</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow._openFID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow._openFID" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that launches the files selector to open a Varian FID file</p>
+<p>Selecting the top level *.fid folder will open it correctly, loading
+both the image data and the procpar file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mr_magic.MainWindow._plotClick">
+<tt class="descname">_plotClick</tt><big>(</big><em>Event</em>, <em>DataPoint</em>, <em>PlotPoint</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow._plotClick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow._plotClick" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that handles clicks to place markers on paired plots</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mr_magic.MainWindow._setCMaps">
+<tt class="descname">_setCMaps</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow._setCMaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow._setCMaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that opens the Color Map Configuration window</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="mr_magic.MainWindow.clearImageMarkers">
-<tt class="descname">clearImageMarkers</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.clearImageMarkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.clearImageMarkers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to clear all markers from the image space plots</p>
+<tt class="descname">clearImageMarkers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.clearImageMarkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.clearImageMarkers" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that clears all markers from the image space plots</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.clearKspaceMarkers">
-<tt class="descname">clearKspaceMarkers</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.clearKspaceMarkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.clearKspaceMarkers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to clear all markers from the k-space plots</p>
+<tt class="descname">clearKspaceMarkers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.clearKspaceMarkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.clearKspaceMarkers" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that clears all markers from the k-space plots</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.dataExplorerToggle">
-<tt class="descname">dataExplorerToggle</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.dataExplorerToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.dataExplorerToggle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to toggle the data explorer display</p>
+<tt class="descname">dataExplorerToggle</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.dataExplorerToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.dataExplorerToggle" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that toggles the data explorer display</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="mr_magic.MainWindow.exitprog">
-<tt class="descname">exitprog</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.exitprog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.exitprog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to exit the program</p>
+<dl class="method">
+<dt id="mr_magic.MainWindow.exitProg">
+<tt class="descname">exitProg</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.exitProg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.exitProg" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that exits the program</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="mr_magic.MainWindow.filtConfigure">
-<tt class="descname">filtConfigure</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.filtConfigure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.filtConfigure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open the Filter configuration window</p>
-</dd></dl>
-
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.kphaseToggle">
-<tt class="descname">kphaseToggle</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.kphaseToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.kphaseToggle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to toggle the k-space phase display</p>
+<tt class="descname">kphaseToggle</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.kphaseToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.kphaseToggle" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that toggles the k-space phase display</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.kspaceToggle">
-<tt class="descname">kspaceToggle</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.kspaceToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.kspaceToggle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to toggle the k-space display</p>
+<tt class="descname">kspaceToggle</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.kspaceToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.kspaceToggle" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that toggles the k-space display</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.magnitudeImageToggle">
-<tt class="descname">magnitudeImageToggle</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.magnitudeImageToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.magnitudeImageToggle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to toggle the image display</p>
+<tt class="descname">magnitudeImageToggle</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.magnitudeImageToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.magnitudeImageToggle" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that toggles the image display</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.maskImage">
-<tt class="descname">maskImage</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.maskImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.maskImage" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggle the masking of the phase map</p>
+<tt class="descname">maskImage</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.maskImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.maskImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that toggles the mask for the image</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.maskPhase">
-<tt class="descname">maskPhase</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.maskPhase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.maskPhase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Toggle the masking of the phase map</p>
+<tt class="descname">maskPhase</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.maskPhase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.maskPhase" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that toggles the mask for the phase map</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="mr_magic.MainWindow.openFID">
-<tt class="descname">openFID</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.openFID"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.openFID" title="Permalink to this definition">¶</a></dt>
-<dd><p>Called to open a Varian FID file</p>
-</dd></dl>
-
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.phaseImageToggle">
-<tt class="descname">phaseImageToggle</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.phaseImageToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.phaseImageToggle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call back to toggle the phase display</p>
+<tt class="descname">phaseImageToggle</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.phaseImageToggle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.phaseImageToggle" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that toggles the phase display</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="mr_magic.MainWindow.plotClick">
-<tt class="descname">plotClick</tt><big>(</big><em>self</em>, <em>Event</em>, <em>DataPoint</em>, <em>PlotPoint</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.plotClick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.plotClick" title="Permalink to this definition">¶</a></dt>
-<dd><p>Click handling to place markers on paired plots</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="mr_magic.MainWindow.setCMaps">
-<tt class="descname">setCMaps</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.setCMaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.setCMaps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open the Color Map Configuration window</p>
-</dd></dl>
-
-<dl class="function">
+<dl class="method">
 <dt id="mr_magic.MainWindow.updateAll">
-<tt class="descname">updateAll</tt><big>(</big><em>self</em><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.updateAll"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.updateAll" title="Permalink to this definition">¶</a></dt>
-<dd><p>Refresh all of the displays with the current data and color maps
+<tt class="descname">updateAll</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mr_magic.html#MainWindow.updateAll"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mr_magic.MainWindow.updateAll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refreshes all of the displays with the current data and color maps
 as well as applying the filter stack.</p>
 </dd></dl>
 
 </dd></dl>
 
+</div>
+<div class="section" id="module-mplwidget">
+<span id="plotting-widget-classes-and-member-functions"></span><h2>Plotting widget Classes and Member functions<a class="headerlink" href="#module-mplwidget" title="Permalink to this headline">¶</a></h2>
+<p>A widget for PyQt4 that displays images using Matplotlib</p>
+<dl class="docutils">
+<dt><a class="reference internal" href="#mplwidget.startColorMapUi" title="mplwidget.startColorMapUi"><tt class="xref py py-class docutils literal"><span class="pre">mplwidget.startColorMapUi</span></tt></a></dt>
+<dd>Brings up a dialog to select the plots colormap.</dd>
+<dt><a class="reference internal" href="#mplwidget.mplCanvas" title="mplwidget.mplCanvas"><tt class="xref py py-class docutils literal"><span class="pre">mplwidget.mplCanvas</span></tt></a></dt>
+<dd>A Qt4 widget used to embed a matplotlib plot in a GUI. Specifically
+designed for use with image data.</dd>
+</dl>
+<dl class="class">
+<dt id="mplwidget._startContrastUI">
+<em class="property">class </em><tt class="descclassname">mplwidget.</tt><tt class="descname">_startContrastUI</tt><big>(</big><em>Parent=None</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#_startContrastUI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget._startContrastUI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Popup window for adjusting contrast</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is not intended to be used outside of hte mplConavas</p>
+</div>
+<dl class="method">
+<dt id="mplwidget._startContrastUI._autoRangeSlot">
+<tt class="descname">_autoRangeSlot</tt><big>(</big><em>State</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#_startContrastUI._autoRangeSlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget._startContrastUI._autoRangeSlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles enabling and disabling the spinboxes for autoranging</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mplwidget.mplCanvas">
+<em class="property">class </em><tt class="descclassname">mplwidget.</tt><tt class="descname">mplCanvas</tt><big>(</big><em>Maskable=False</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for displaying the images. Conatins most of the information
+needed to show the image and mark it up.</p>
+<dl class="method">
+<dt id="mplwidget.mplCanvas._cMapPicker">
+<tt class="descname">_cMapPicker</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas._cMapPicker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas._cMapPicker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the UI to select a colormap for the display.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas._contrastSlot">
+<tt class="descname">_contrastSlot</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas._contrastSlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas._contrastSlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Control function for changing the contrast.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas._minMaxSlot">
+<tt class="descname">_minMaxSlot</tt><big>(</big><em>State=2</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas._minMaxSlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas._minMaxSlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot to set the display limits for the image.</p>
+<dl class="docutils">
+<dt><strong>Args:</strong></dt>
+<dd>State(int): Indicates if the min/max values should be updated
+or removed. The call signature of the slot is overloaded so 
+that the connected signal may include either the integer (a 
+value of 2 clears minMax, 0 updates with the spinbox values) or 
+no data, in which case minMax is cleared.</dd>
+</dl>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p><a class="reference internal" href="#mplwidget.mplCanvas.setMinMax" title="mplwidget.mplCanvas.setMinMax"><tt class="xref py py-meth docutils literal"><span class="pre">setMinMax()</span></tt></a> which does that actual work of setting 
+the minMax value.</p>
+<p class="last"><a class="reference internal" href="#mplwidget.mplCanvas.removeMinMax" title="mplwidget.mplCanvas.removeMinMax"><tt class="xref py py-meth docutils literal"><span class="pre">removeMinMax()</span></tt></a> which is used to clear the value</p>
+</div>
+<div class="admonition-todo admonition" id="index-5">
+<p class="first admonition-title">Todo</p>
+<p class="last">Change this to send the values via the signal.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas._plotClick">
+<tt class="descname">_plotClick</tt><big>(</big><em>Event</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas._plotClick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas._plotClick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matplotlib click handling to place markers on plots</p>
+<div class="admonition-todo admonition" id="index-6">
+<p class="first admonition-title">Todo</p>
+<p class="last">This is fairly restrictive, probably need to generalize to
+make it possible to SNR boxes, more marks, distance measures, etc.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.addMarker">
+<tt class="descname">addMarker</tt><big>(</big><em>Coord</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.addMarker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.addMarker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draws a small circle at the supplied data coordinates</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.clearMarkers">
+<tt class="descname">clearMarkers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.clearMarkers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.clearMarkers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the markers from the canvas and from the class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.contextMenuEvent">
+<tt class="descname">contextMenuEvent</tt><big>(</big><em>Event</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.contextMenuEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.contextMenuEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a context menu for adjusting the widget.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.imshow">
+<tt class="descname">imshow</tt><big>(</big><em>Data=None</em>, <em>CMap=None</em>, <em>Aspect=None</em>, <em>Mask=None</em>, <em>MinMax=None</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.imshow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.imshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows the data supplied, maintining the aspect ratio.</p>
+<dl class="docutils">
+<dt><strong>Args:</strong></dt>
+<dd><ul class="first last">
+<li><p class="first">Data (array): the image to be shown</p>
+</li>
+<li><p class="first">CMap (str): name of the mpl colormap to be used</p>
+</li>
+<li><p class="first">Aspect (float): aspect ratio of the image</p>
+</li>
+<li><p class="first">Mask (array): binary array used to mask the image</p>
+</li>
+<li><dl class="first docutils">
+<dt>MinMax (tuple): minimum and maximum values for windowing the </dt>
+<dd><p class="first last">image</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p><strong>Argument Behaviours</strong>
+Arguments that are not supplied default to None.</p>
+<p><em>Data:</em> If a Data matrix is not supplied, then the last shown image
+(stored in self.data) will be used. If self.data == None, and new Data
+has not been supplied, then the function will return. If new Data is
+supplied, then it is stored in self.data.</p>
+<p><em>CMap:</em> If a colormap name is not supplied, then the currently stored
+colormap is used. If a colormap is supplied, then it is stored in the
+class member CMap.</p>
+<p><em>Aspect:</em> If no aspect ratio is supplied and no previous value was
+stored, then the ratio is guess from the resolution. If a previous
+value was set, then it is used. If a value is supplied, then is stored
+in the class member aspectRatio.</p>
+<p><em>Mask:</em> If a binary mask is not supplied, then the previous mask is
+used. If it is supplied, then the mask is stored in the class member
+mask.</p>
+<p><em>MinMax:</em> If a tuple of two elements is not supplied, then the class
+member minMax is used to set the display range. If no min or max has 
+been supplied the the plot will autorange. If a tuple is given the it
+will be stored in the class member minMax.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#mplwidget.mplCanvas.refresh" title="mplwidget.mplCanvas.refresh"><tt class="xref py py-meth docutils literal"><span class="pre">refresh()</span></tt></a> to quickly refresh the image display</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.refresh">
+<tt class="descname">refresh</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.refresh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redraws any markers that are in the list.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.removeMask">
+<tt class="descname">removeMask</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.removeMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.removeMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to unmask the image.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.removeMinMax">
+<tt class="descname">removeMinMax</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.removeMinMax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.removeMinMax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to set the image to autorange.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.saveImage">
+<tt class="descname">saveImage</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.saveImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.saveImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the image being shown to a file.</p>
+<div class="admonition-todo admonition" id="index-7">
+<p class="first admonition-title">Todo</p>
+<p class="last">Fix the file type list, it&#8217;s not what I really want.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.setCMap">
+<tt class="descname">setCMap</tt><big>(</big><em>CMap='gray'</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.setCMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.setCMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the colormap for the image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.setContrast">
+<tt class="descname">setContrast</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.setContrast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.setContrast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the contrast function for the plot.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.setMask">
+<tt class="descname">setMask</tt><big>(</big><em>Mask</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.setMask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.setMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and apply a mask for the image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.setMinMax">
+<tt class="descname">setMinMax</tt><big>(</big><em>Min</em>, <em>Max</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.setMinMax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.setMinMax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the display limits for the image</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.mplCanvas.toggleCBar">
+<tt class="descname">toggleCBar</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#mplCanvas.toggleCBar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.mplCanvas.toggleCBar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn on and off the color bar for the plot.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mplwidget.startColorMapUi">
+<em class="property">class </em><tt class="descclassname">mplwidget.</tt><tt class="descname">startColorMapUi</tt><big>(</big><em>CMap='gray'</em>, <em>parent=None</em><big>)</big><a class="reference internal" href="_modules/mplwidget.html#startColorMapUi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.startColorMapUi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for the color map selector UI. It displays a combo box of all
+available maps, shows the current map as a color bar, and has accept/reject
+buttons.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is not intended to be used outside of the mplCanvas</p>
+</div>
+<dl class="method">
+<dt id="mplwidget.startColorMapUi._dataCarrier">
+<tt class="descname">_dataCarrier</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#startColorMapUi._dataCarrier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.startColorMapUi._dataCarrier" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that sends a QT signal with the selected colormap.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mplwidget.startColorMapUi._drawBar">
+<tt class="descname">_drawBar</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/mplwidget.html#startColorMapUi._drawBar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mplwidget.startColorMapUi._drawBar" title="Permalink to this definition">¶</a></dt>
+<dd><p>QT slot that draws a bar showing the current colormap.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="things-to-do">
+<h2>Things to do<a class="headerlink" href="#things-to-do" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add procpar explorer</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-0"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mr_magic, line 29.)</p>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add GE pFile importer</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-1"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mr_magic, line 31.)</p>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add SNR comutation</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-2"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mr_magic, line 33.)</p>
+<div class="admonition-todo admonition" id="index-3">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add configuration window</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-3"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mr_magic, line 35.)</p>
+<div class="admonition-todo admonition" id="index-4">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add save configuration</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-4"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mr_magic, line 37.)</p>
+<div class="admonition-todo admonition" id="index-5">
+<p class="first admonition-title">Todo</p>
+<p class="last">Change this to send the values via the signal.</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-5"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mplwidget.mplCanvas._minMaxSlot, line 16.)</p>
+<div class="admonition-todo admonition" id="index-6">
+<p class="first admonition-title">Todo</p>
+<p class="last">This is fairly restrictive, probably need to generalize to
+make it possible to SNR boxes, more marks, distance measures, etc.</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-6"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mplwidget.mplCanvas._plotClick, line 3.)</p>
+<div class="admonition-todo admonition" id="index-7">
+<p class="first admonition-title">Todo</p>
+<p class="last">Fix the file type list, it&#8217;s not what I really want.</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-7"><em>original entry</em></a> is located in  &lt;string&gt;:docstring of mplwidget.mplCanvas.saveImage, line 3.)</p>
+</div>
 </div>
 
 
@@ -156,6 +496,23 @@ as well as applying the filter stack.</p>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Auto Generated Documentation</a><ul>
+<li><a class="reference internal" href="#module-mr_magic">Main Window Overview</a><ul>
+<li><a class="reference internal" href="#main-mr-magic-todo-list">Main MR Magic todo List</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#main-window-classes-and-member-functions">Main Window Classes and Member functions</a></li>
+<li><a class="reference internal" href="#module-mplwidget">Plotting widget Classes and Member functions</a></li>
+<li><a class="reference internal" href="#things-to-do">Things to do</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gettingStarted.html"
+                        title="previous chapter">Getting Started</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/code.txt"
@@ -187,12 +544,14 @@ as well as applying the filter stack.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="gettingStarted.html" title="Getting Started"
+             >previous</a> |</li>
         <li><a href="index.html">MR_Magic 1.0B documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Neal Hollingsworth.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

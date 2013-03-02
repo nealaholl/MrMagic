@@ -1,7 +1,45 @@
 """
-Program that imports, recons, displays, filters, and does other general purpose
-funcitons to MR images.
+General purpose MRI image display.
+
+**Classes:**
+
+    * MainWindow: Core GUI element for MR Magic.
+
+**Dependencies:**
+
+    **Standard modules:**
+    
+    * numpy: Primary math and processing
+    * nmrglue: Varian FID importer, needs to be the modified version
+    * PyQt4: The GUI is built on this
+    
+    **Custom modules, general purpose:**
+    
+    * filters:  Builds the various filters and masks used to process images
+    
+    **GUI element modules:**
+    
+    * main_window: Machine generated class for the main windos
+    * startCMPUI: GUI for setting the colormaps of the images
+    * filter_config_class: GUI to create and manage the filter stack
+    
+.. moduleauthor:: Neal Hollingsworth
+
+Main MR Magic todo List
+_______________________ 
+.. todo:: Add procpar explorer
+
+.. todo:: Add GE pFile importer
+
+.. todo:: Add SNR comutation
+
+.. todo:: Add configuration window
+
+.. todo:: Add save configuration
+
 """
+
+
 
 import sys
 import os
@@ -9,9 +47,9 @@ import platform
 
 import numpy as np
 import nmrglue as ng
-import filters as filt
 from PyQt4 import QtGui, QtCore
 
+import filters as filt
 from main_window import Ui_MainWindow
 import startCMPUI
 from filter_config_class import FilterConfig
@@ -19,7 +57,7 @@ from filter_config_class import FilterConfig
 
 class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     """
-    The main magic happens here!
+    The primary GUI element
 
     """
     dic = []  # sequence descriptor
@@ -37,19 +75,21 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
              'phase': 'gist_rainbow'}
 
     def __init__(self, Parent=None):
-        # initilizes the main window
+        """
+        Setup the main window GUI
+        """
         QtGui.QMainWindow.__init__(self, Parent)
         self.setupUi(self)
 
         # connect the open and colormap menu items
-        self.actionFID.triggered.connect(self.openFID)
-        self.actionColor_Maps.triggered.connect(self.setCMaps)
-        self.actionConfigureFilters.triggered.connect(self.filtConfigure)
+        self.actionFID.triggered.connect(self._openFID)
+        self.actionColor_Maps.triggered.connect(self._setCMaps)
+        self.actionConfigureFilters.triggered.connect(self._filtConfigure)
         self.actionKspace.triggered.connect(self.kspace.setContrast)
         self.actionKspace_Phase.triggered.connect(self.kspacePhase.setContrast)
         self.actionMagnitude.triggered.connect(self.magnitudeImage.setContrast)
         self.actionPhase_Map.triggered.connect(self.phaseImage.setContrast)
-        self.actionExit.triggered.connect(self.exitprog)
+        self.actionExit.triggered.connect(self.exitProg)
         # Connect the show/hide control for the sub-windows
         self.actionData_Explorer.triggered.connect(self.dataExplorerToggle)
         self.actionMagnitude_Image.triggered.connect(self.magnitudeImageToggle)
@@ -65,10 +105,10 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.kspacePhase.clearMarks.connect(self.clearKspaceMarkers)
 
         # Connect the click signals from the plots
-        self.magnitudeImage.setMark.connect(self.plotClick)
-        self.phaseImage.setMark.connect(self.plotClick)
-        self.kspace.setMark.connect(self.plotClick)
-        self.kspacePhase.setMark.connect(self.plotClick)
+        self.magnitudeImage.setMark.connect(self._plotClick)
+        self.phaseImage.setMark.connect(self._plotClick)
+        self.kspace.setMark.connect(self._plotClick)
+        self.kspacePhase.setMark.connect(self._plotClick)
 
         # Default to not showing a few subwindows
         self.dataExplorerDock.hide()
@@ -81,8 +121,13 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
         self.magnitudeImage.toggleMask.connect(self.maskImage)
 
     @QtCore.pyqtSlot()
-    def openFID(self):
-        """ Called to open a Varian FID file """
+    def _openFID(self):
+        """ QT slot that launches the files selector to open a Varian FID file
+        
+        Selecting the top level \*.fid folder will open it correctly, loading
+        both the image data and the procpar file.
+        
+        """
         # launch the folder selection dialog
         if platform.system() == 'Windows':
             home = os.environ['USERPROFILE']
@@ -107,8 +152,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.updateAll()
 
     @QtCore.pyqtSlot()
-    def filtConfigure(self):
-        """ Open the Filter configuration window """
+    def _filtConfigure(self):
+        """ QT slot that opens the Filter configuration window """
         self.subwindow = FilterConfig(Dim=np.shape(self.data),
                                       FilterStack=self.filterStack)
         if self.subwindow.exec_():
@@ -116,8 +161,8 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.updateAll()
 
     @QtCore.pyqtSlot()
-    def setCMaps(self):
-        """ Open the Color Map Configuration window"""
+    def _setCMaps(self):
+        """ QT slot that opens the Color Map Configuration window"""
         self.subwindow = startCMPUI.startCMPUI(self.CMaps)
         if self.subwindow.exec_():  # on exit, set the new color maps
             self.CMaps = self.subwindow.CMaps
@@ -125,7 +170,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     def updateAll(self):
         """
-        Refresh all of the displays with the current data and color maps
+        Refreshes all of the displays with the current data and color maps
         as well as applying the filter stack.
 
         """
@@ -152,7 +197,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot(int)
     def dataExplorerToggle(self):
-        """ Call back to toggle the data explorer display"""
+        """ QT slot that toggles the data explorer display"""
         if self.dataExplorerDock.isVisible():
             self.dataExplorerDock.hide()
         else:
@@ -160,7 +205,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def magnitudeImageToggle(self):
-        """ Call back to toggle the image display"""
+        """ QT slot that toggles the image display"""
         if self.magnitudeDock.isVisible():
             self.magnitudeDock.hide()
         else:
@@ -168,7 +213,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def phaseImageToggle(self):
-        """ Call back to toggle the phase display"""
+        """ QT slot that toggles the phase display"""
         if self.phaseDock.isVisible():
             self.phaseDock.hide()
         else:
@@ -176,7 +221,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def kspaceToggle(self):
-        """ Call back to toggle the k-space display"""
+        """ QT slot that toggles the k-space display"""
         if self.kspaceDock.isVisible():
             self.kspaceDock.hide()
         else:
@@ -184,15 +229,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def kphaseToggle(self):
-        """ Call back to toggle the k-space phase display"""
+        """ QT slot that toggles the k-space phase display"""
         if self.kspacePhaseDock.isVisible():
             self.kspacePhaseDock.hide()
         else:
             self.kspacePhaseDock.show()
 
     @QtCore.pyqtSlot(int)
-    def plotClick(self, Event, DataPoint, PlotPoint):
-        """ Click handling to place markers on paired plots"""
+    def _plotClick(self, Event, DataPoint, PlotPoint):
+        """ QT slot that handles clicks to place markers on paired plots"""
         if (Event.canvas == self.magnitudeImage):
             self.iMag.setText(str(np.abs(self.image[DataPoint])))
             self.iPhase.setText(str(np.angle(self.image[DataPoint])))
@@ -215,7 +260,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot(int)
     def clearImageMarkers(self):
-        """ Call back to clear all markers from the image space plots """
+        """ QT slot that clears all markers from the image space plots """
         self.magnitudeImage.clearMarkers()
         self.phaseImage.clearMarkers()
 
@@ -224,7 +269,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot(int)
     def clearKspaceMarkers(self):
-        """ Call back to clear all markers from the k-space plots """
+        """ QT slot that clears all markers from the k-space plots """
         self.kspace.clearMarkers()
         self.kspacePhase.clearMarkers()
 
@@ -233,7 +278,7 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def maskPhase(self):
-        """ Toggle the masking of the phase map """
+        """ QT slot that toggles the mask for the phase map """
         if self.phaseImage.mask is None:
             self.phaseImage.setMask(Mask=filt.mask(self.image))
         else:
@@ -241,15 +286,15 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
     @QtCore.pyqtSlot()
     def maskImage(self):
-        """ Toggle the masking of the phase map """
+        """ QT slot that toggles the mask for the image """
         if self.magnitudeImage.mask is None:
             self.magnitudeImage.setMask(Mask=filt.mask(self.image))
         else:
             self.magnitudeImage.removeMask()
 
     @QtCore.pyqtSlot(int)
-    def exitprog(self):
-        """ Call back to exit the program"""
+    def exitProg(self):
+        """ QT slot that exits the program"""
         self.close()
 
 
@@ -258,3 +303,4 @@ if __name__ == "__main__":
     myapp = MainWindow()
     myapp.show()
     sys.exit(app.exec_())
+    

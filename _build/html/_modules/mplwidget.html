@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mplwidget &mdash; MR_Magic 1.0B documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0B',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MR_Magic 1.0B documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">MR_Magic 1.0B documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for mplwidget</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A widget for PyQt4 that displays images using Matplotlib</span>
+
+<span class="sd">:class:&#39;startColorMapUi&#39;</span>
+<span class="sd">    Brings up a dialog to select the plots colormap.</span>
+<span class="sd">    </span>
+<span class="sd">:class:&#39;mplWidget&#39;</span>
+<span class="sd">    A Qt4 widget used to embed a matplotlib plot in a GUI. Specifically</span>
+<span class="sd">    designed for use with image data.</span>
+<span class="sd">    </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">PyQt4</span> <span class="kn">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_qt4agg</span> <span class="kn">import</span> <span class="n">FigureCanvasQTAgg</span>
+<span class="kn">from</span> <span class="nn">matplotlib.figure</span> <span class="kn">import</span> <span class="n">Figure</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="kn">as</span> <span class="nn">pch</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">contrast</span> <span class="kn">import</span> <span class="n">Ui_ContrastSettings</span>
+<span class="kn">from</span> <span class="nn">ColorMap</span> <span class="kn">import</span> <span class="n">Ui_CMapDialog</span>
+
+
+<div class="viewcode-block" id="startColorMapUi"><a class="viewcode-back" href="../code.html#mplwidget.startColorMapUi">[docs]</a><span class="k">class</span> <span class="nc">startColorMapUi</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QDialog</span><span class="p">,</span> <span class="n">Ui_CMapDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for the color map selector UI. It displays a combo box of all</span>
+<span class="sd">    available maps, shows the current map as a color bar, and has accept/reject</span>
+<span class="sd">    buttons.</span>
+<span class="sd">    </span>
+<span class="sd">    .. warning:: This is not intended to be used outside of the mplwidget</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">returnData</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CMap</span><span class="o">=</span><span class="s">&#39;gray&#39;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QDialog</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">CMap</span> <span class="o">=</span> <span class="n">CMap</span>
+        <span class="c"># Obtain a list of the available colormaps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maps</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">datad</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&quot;_r&quot;</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>  <span class="c"># organize them in alphabetical order</span>
+        <span class="c">#populate the combo boxes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ComboBox</span><span class="o">.</span><span class="n">addItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ComboBox</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ComboBox</span><span class="o">.</span><span class="n">findText</span><span class="p">(</span><span class="n">CMap</span><span class="p">))</span>
+        <span class="c">#initial draw of the color bar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drawBar</span><span class="p">()</span>
+
+        <span class="c">#connect the UI elements to their functions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ComboBox</span><span class="o">.</span><span class="n">activated</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_drawBar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonBox</span><span class="o">.</span><span class="n">rejected</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reject</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonBox</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accept</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonBox</span><span class="o">.</span><span class="n">accepted</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dataCarrier</span><span class="p">)</span>
+
+    <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
+<div class="viewcode-block" id="startColorMapUi._drawBar"><a class="viewcode-back" href="../code.html#mplwidget.startColorMapUi._drawBar">[docs]</a>    <span class="k">def</span> <span class="nf">_drawBar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that draws a bar showing the current colormap. &quot;&quot;&quot;</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">20</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ComboBox</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CMap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">aspect</span><span class="o">=</span><span class="s">&#39;auto&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</div>
+    <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
+<div class="viewcode-block" id="startColorMapUi._dataCarrier"><a class="viewcode-back" href="../code.html#mplwidget.startColorMapUi._dataCarrier">[docs]</a>    <span class="k">def</span> <span class="nf">_dataCarrier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that sends a QT signal with the selected colormap. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">returnData</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CMap</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="_startContrastUI"><a class="viewcode-back" href="../code.html#mplwidget._startContrastUI">[docs]</a><span class="k">class</span> <span class="nc">_startContrastUI</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QDialog</span><span class="p">,</span> <span class="n">Ui_ContrastSettings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; popup window for adjusting contrast &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">QtGui</span><span class="o">.</span><span class="n">QDialog</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoRange</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_autoRangeSlot</span><span class="p">)</span>
+
+    <span class="nd">@QtCore.pyqtSlot</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<div class="viewcode-block" id="_startContrastUI._autoRangeSlot"><a class="viewcode-back" href="../code.html#mplwidget._startContrastUI._autoRangeSlot">[docs]</a>    <span class="k">def</span> <span class="nf">_autoRangeSlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">State</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Handles enabling and disabling the spinboxes for autoranging&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">State</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">minSB</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">maxSB</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">State</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">minSB</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">maxSB</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="mplCanvas"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas">[docs]</a><span class="k">class</span> <span class="nc">mplCanvas</span><span class="p">(</span><span class="n">FigureCanvasQTAgg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for displaying the images. Conatins most of the information</span>
+<span class="sd">    needed to show the image and mark it up.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">circles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c"># Signal to emit when clearing marks. Has to be here, not sure why?</span>
+    <span class="n">clearMarks</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">setMark</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">pyqtSignal</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">backend_bases</span><span class="o">.</span><span class="n">MouseEvent</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+    <span class="n">toggleMask</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">pyqtSignal</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Maskable</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="n">QtCore</span><span class="o">.</span><span class="n">QObject</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c"># Member elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cadj</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filterstack</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CMap</span> <span class="o">=</span> <span class="s">&#39;gray&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">im</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cbar</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aspectRatio</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minMax</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maskable</span> <span class="o">=</span> <span class="n">Maskable</span>
+        <span class="c"># Setup the canvas and axes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s">&#39;equal&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+        <span class="c"># Need to understand what this actually does....</span>
+        <span class="n">FigureCanvasQTAgg</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="p">)</span>
+        <span class="n">FigureCanvasQTAgg</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Expanding</span><span class="p">,</span>
+                                        <span class="n">QtGui</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Expanding</span><span class="p">)</span>
+        <span class="n">FigureCanvasQTAgg</span><span class="o">.</span><span class="n">updateGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s">&#39;button_press_event&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plotClick</span><span class="p">)</span>
+
+<div class="viewcode-block" id="mplCanvas.addMarker"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.addMarker">[docs]</a>    <span class="k">def</span> <span class="nf">addMarker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Coord</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Draws a small circle at the supplied data coordinates &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">circ</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">circles</span><span class="p">:</span>
+            <span class="n">circ</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">circles</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">circles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pch</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">Coord</span><span class="p">,</span>
+                                       <span class="n">radius</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                       <span class="n">lw</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+                                       <span class="n">ec</span><span class="o">=</span><span class="s">&#39;yellow&#39;</span><span class="p">,</span>
+                                       <span class="n">fc</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">circles</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="mplCanvas.contextMenuEvent"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.contextMenuEvent">[docs]</a>    <span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Construct a context menu for adjusting the widget. &quot;&quot;&quot;</span>
+        <span class="n">menu</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c"># Setup the menu</span>
+        <span class="n">clearMarkersAction</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;Clear Markers&quot;</span><span class="p">)</span>
+        <span class="n">setCMapAction</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;Set CMap&quot;</span><span class="p">)</span>
+        <span class="n">setContrastAction</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;Set Contrast&quot;</span><span class="p">)</span>
+        <span class="n">saveImageAction</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;Save Image&quot;</span><span class="p">)</span>
+        <span class="n">toggleCBarAction</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;Colorbar&quot;</span><span class="p">)</span>
+        <span class="n">toggleCBarAction</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">toggleCBarAction</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maskable</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">maskAction</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;Mask&quot;</span><span class="p">)</span>
+            <span class="n">maskAction</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">maskAction</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="c"># Switch on the action clicked</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">menu</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapToGlobal</span><span class="p">(</span><span class="n">Event</span><span class="o">.</span><span class="n">pos</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="n">clearMarkersAction</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clearMarks</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">setCMapAction</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cMapPicker</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">setContrastAction</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setContrast</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">saveImageAction</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saveImage</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">toggleCBarAction</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toggleCBar</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">maskable</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">action</span> <span class="o">==</span> <span class="n">maskAction</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toggleMask</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas.imshow"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.imshow">[docs]</a>    <span class="k">def</span> <span class="nf">imshow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">CMap</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">Aspect</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">Mask</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">MinMax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shows the data supplied, maintining the aspect ratio.</span>
+<span class="sd">        </span>
+<span class="sd">        **Args:**</span>
+<span class="sd">            - Data (array): the image to be shown</span>
+<span class="sd">            - CMap (str): name of the mpl colormap to be used</span>
+<span class="sd">            - Aspect (float): aspect ratio of the image</span>
+<span class="sd">            - Mask (array): binary array used to mask the image</span>
+<span class="sd">            - MinMax (tuple): minimum and maximum values for windowing the </span>
+<span class="sd">                image</span>
+<span class="sd">            </span>
+<span class="sd">        **Kwargs:**</span>
+<span class="sd">        </span>
+<span class="sd">        **Default Behaviours**</span>
+<span class="sd">        Arguments that are not supplied default to None.</span>
+<span class="sd">        </span>
+<span class="sd">        *Data:* If a Data matrix is not supplied, then the last shown image</span>
+<span class="sd">        (stored in self.data) will be used. If self.data == None, and new Data</span>
+<span class="sd">        has not been supplied, then the function will return. If new Data is</span>
+<span class="sd">        supplied, then it is stored in self.data.</span>
+<span class="sd">        </span>
+<span class="sd">        *CMap:* If a colormap name is not supplied, then the currently stored</span>
+<span class="sd">        colormap is used. If a colormap is supplied, then it is stored in the</span>
+<span class="sd">        class member CMap.</span>
+<span class="sd">        </span>
+<span class="sd">        *Aspect:* If no aspect ratio is supplied and no previous value was</span>
+<span class="sd">        stored, then the ratio is guess from the resolution. If a previous</span>
+<span class="sd">        value was set, then it is used. If a value is supplied, then is stored</span>
+<span class="sd">        in the class member aspectRatio. </span>
+<span class="sd">        </span>
+<span class="sd">        *Mask:* If a binary mask is not supplied, then the previous mask is</span>
+<span class="sd">        used. If it is supplied, then the mask is stored in the class member</span>
+<span class="sd">        mask.</span>
+<span class="sd">        </span>
+<span class="sd">        *MinMax:* If a tuple of two elements is not supplied, then the class</span>
+<span class="sd">        member minMax is used to set the display range. If no min or max has </span>
+<span class="sd">        been supplied the the plot will autorange. If a tuple is given the it</span>
+<span class="sd">        will be stored in the class member minMax.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">configs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">Data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">CMap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CMap</span> <span class="o">=</span> <span class="n">CMap</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">Mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">Mask</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">Mask</span>
+        <span class="k">elif</span> <span class="n">Mask</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span>
+
+        <span class="c"># Set the aspect ratio, default to a square</span>
+        <span class="k">if</span> <span class="n">Aspect</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">aspectRatio</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s">&#39;aspect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="o">/</span>
+                                 <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="n">Aspect</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s">&#39;aspect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aspectRatio</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aspectRatio</span> <span class="o">=</span> <span class="n">Aspect</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s">&#39;aspect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Aspect</span>
+
+        <span class="c"># Set the min/max cutoffs, default to auto ranging</span>
+        <span class="k">if</span> <span class="n">MinMax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">minMax</span> <span class="o">=</span> <span class="n">MinMax</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s">&#39;vmin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MinMax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s">&#39;vmax&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MinMax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">minMax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s">&#39;vmin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minMax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s">&#39;vmax&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minMax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c"># Clean up anything that was already displayed, and go again</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cadj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">*</span><span class="n">mask</span><span class="p">),</span>
+                                 <span class="n">cmap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">CMap</span><span class="p">,</span>
+                                 <span class="o">**</span><span class="n">configs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas.toggleCBar"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.toggleCBar">[docs]</a>    <span class="k">def</span> <span class="nf">toggleCBar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Turn on and off the color bar for the plot. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">im</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cbar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="p">:</span>
+            <span class="c">#ugly hack to rebuild the plot correctly</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cbar</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s">&#39;equal&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imshow</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas._cMapPicker"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas._cMapPicker">[docs]</a>    <span class="k">def</span> <span class="nf">_cMapPicker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Start the UI to select a colormap for the display. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span> <span class="o">=</span> <span class="n">startColorMapUi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CMap</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">returnData</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">setCMap</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">exec_</span><span class="p">():</span>  <span class="c"># on exit, set the new color maps</span>
+            <span class="k">return</span>
+</div>
+    <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
+<div class="viewcode-block" id="mplCanvas._contrastSlot"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas._contrastSlot">[docs]</a>    <span class="k">def</span> <span class="nf">_contrastSlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Control function for changing the contrast.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">radioGamma</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="c"># Lambda function that corrisponds to a gamma transform</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cadj</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span>\
+                <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">gammaSldr</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="o">/</span><span class="mf">10.0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">radioLog</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="c"># Lambda function for a log transform</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cadj</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mf">1.0</span><span class="o">+</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Lambda function for no contrast adjustment</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cadj</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imshow</span><span class="p">()</span>
+</div>
+    <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
+    <span class="nd">@QtCore.pyqtSlot</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<div class="viewcode-block" id="mplCanvas._minMaxSlot"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas._minMaxSlot">[docs]</a>    <span class="k">def</span> <span class="nf">_minMaxSlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot to set the display limits for the image.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setMinMax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">minSB</span><span class="o">.</span><span class="n">value</span><span class="p">(),</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">maxSB</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removeMinMax</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas.refresh"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.refresh">[docs]</a>    <span class="k">def</span> <span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;      </span>
+<span class="sd">        Redraws any markers that are in the list.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">circ</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">findobj</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="n">pch</span><span class="o">.</span><span class="n">Circle</span><span class="p">):</span>
+            <span class="n">circ</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">circ</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">circles</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">circ</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas.removeMask"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.removeMask">[docs]</a>    <span class="k">def</span> <span class="nf">removeMask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Convenience function to unmask the image. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imshow</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="mplCanvas.removeMinMax"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.removeMinMax">[docs]</a>    <span class="k">def</span> <span class="nf">removeMinMax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Convenience function to set the image to autorange. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minMax</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imshow</span><span class="p">()</span>
+ </div>
+<div class="viewcode-block" id="mplCanvas.setCMap"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.setCMap">[docs]</a>    <span class="k">def</span> <span class="nf">setCMap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">CMap</span><span class="o">=</span><span class="s">&#39;gray&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the colormap for the image&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CMap</span> <span class="o">=</span> <span class="n">CMap</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">im</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">set_cmap</span><span class="p">(</span><span class="n">CMap</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="mplCanvas.setContrast"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.setContrast">[docs]</a>    <span class="k">def</span> <span class="nf">setContrast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Change the contrast function for the plot. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span> <span class="o">=</span> <span class="n">_startContrastUI</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">minSB</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">get_clim</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">maxSB</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">get_clim</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">radioGamma</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_contrastSlot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">radioLog</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_contrastSlot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">radioConstant</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_contrastSlot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">gammaSldr</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_contrastSlot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">minSB</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_minMaxSlot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">maxSB</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_minMaxSlot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">autoRange</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_minMaxSlot</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">exec_</span><span class="p">():</span>
+            <span class="k">return</span>
+            </div>
+<div class="viewcode-block" id="mplCanvas.setMinMax"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.setMinMax">[docs]</a>    <span class="k">def</span> <span class="nf">setMinMax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the display limits for the image&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minMax</span> <span class="o">=</span> <span class="p">(</span><span class="n">Min</span><span class="p">,</span> <span class="n">Max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">im</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">Min</span><span class="p">,</span> <span class="n">Max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas._plotClick"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas._plotClick">[docs]</a>    <span class="k">def</span> <span class="nf">_plotClick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Matplotlib click handling to place markers on plots&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">Event</span><span class="o">.</span><span class="n">button</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="c"># TODO: Figure out if this means I&#39;ve reversed indexing somewhere.</span>
+        <span class="n">dataCoord</span> <span class="o">=</span> <span class="p">(</span><span class="n">Event</span><span class="o">.</span><span class="n">ydata</span><span class="p">,</span> <span class="n">Event</span><span class="o">.</span><span class="n">xdata</span><span class="p">)</span>
+        <span class="n">plotCoord</span> <span class="o">=</span> <span class="p">(</span><span class="n">Event</span><span class="o">.</span><span class="n">xdata</span><span class="p">,</span> <span class="n">Event</span><span class="o">.</span><span class="n">ydata</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">Event</span><span class="p">,</span> <span class="n">dataCoord</span><span class="p">,</span> <span class="n">plotCoord</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addMarker</span><span class="p">(</span><span class="n">plotCoord</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="mplCanvas.setMask"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.setMask">[docs]</a>    <span class="k">def</span> <span class="nf">setMask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Mask</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create and apply a mask for the image&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">Mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imshow</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas.clearMarkers"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.clearMarkers">[docs]</a>    <span class="k">def</span> <span class="nf">clearMarkers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Removes the markers from the canvas and from the class &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">circ</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">circles</span><span class="p">:</span>
+            <span class="n">circ</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">circles</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="mplCanvas.saveImage"><a class="viewcode-back" href="../code.html#mplwidget.mplCanvas.saveImage">[docs]</a>    <span class="k">def</span> <span class="nf">saveImage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Save the image being shown to a file. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFileDialog</span><span class="p">()</span>
+        <span class="n">svf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&quot;Save Image&quot;</span><span class="p">,</span> <span class="s">&quot;C:/&quot;</span><span class="p">,</span>
+                                             <span class="s">&quot;Images (*.png *.jpg)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">svf</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&#39;tight&#39;</span><span class="p">,</span> <span class="n">pad_inches</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">MR_Magic 1.0B documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Neal Hollingsworth.
+    </div>
+  </body>
+</html>

@@ -51,9 +51,35 @@
             
   <h1>Source code for mr_magic</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Program that imports, recons, displays, filters, and does other general purpose</span>
-<span class="sd">funcitons to MR images.</span>
+<span class="sd">General purpose MRI image display.</span>
+
+<span class="sd">**Classes:**</span>
+
+<span class="sd">    * MainWindow: Core GUI element for MR Magic.</span>
+
+<span class="sd">**Dependencies:**</span>
+
+<span class="sd">    **Standard modules:**</span>
+<span class="sd">    </span>
+<span class="sd">    * numpy: Primary math and processing</span>
+<span class="sd">    * nmrglue: Varian FID importer, needs to be the modified version</span>
+<span class="sd">    * PyQt4: The GUI is built on this</span>
+<span class="sd">    </span>
+<span class="sd">    **Custom modules, general purpose:**</span>
+<span class="sd">    </span>
+<span class="sd">    * filters:  Builds the various filters and masks used to process images</span>
+<span class="sd">    </span>
+<span class="sd">    **GUI element modules:**</span>
+<span class="sd">    </span>
+<span class="sd">    * main_window: Machine generated class for the main windos</span>
+<span class="sd">    * startCMPUI: GUI for setting the colormaps of the images</span>
+<span class="sd">    * filter_config_class: GUI to create and manage the filter stack</span>
+<span class="sd">    </span>
+<span class="sd">.. moduleauthor:: Neal Hollingsworth</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
+
+
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -61,9 +87,9 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">nmrglue</span> <span class="kn">as</span> <span class="nn">ng</span>
-<span class="kn">import</span> <span class="nn">filters</span> <span class="kn">as</span> <span class="nn">filt</span>
 <span class="kn">from</span> <span class="nn">PyQt4</span> <span class="kn">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
 
+<span class="kn">import</span> <span class="nn">filters</span> <span class="kn">as</span> <span class="nn">filt</span>
 <span class="kn">from</span> <span class="nn">main_window</span> <span class="kn">import</span> <span class="n">Ui_MainWindow</span>
 <span class="kn">import</span> <span class="nn">startCMPUI</span>
 <span class="kn">from</span> <span class="nn">filter_config_class</span> <span class="kn">import</span> <span class="n">FilterConfig</span>
@@ -71,7 +97,7 @@
 
 <div class="viewcode-block" id="MainWindow"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow">[docs]</a><span class="k">class</span> <span class="nc">MainWindow</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">,</span> <span class="n">Ui_MainWindow</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The main magic happens here!</span>
+<span class="sd">    The primary GUI element</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dic</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># sequence descriptor</span>
@@ -88,20 +114,22 @@
              <span class="s">&#39;mag&#39;</span><span class="p">:</span> <span class="s">&#39;gray&#39;</span><span class="p">,</span>
              <span class="s">&#39;phase&#39;</span><span class="p">:</span> <span class="s">&#39;gist_rainbow&#39;</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="c"># initilizes the main window</span>
+<div class="viewcode-block" id="MainWindow.__init__"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setup the main window GUI</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">QtGui</span><span class="o">.</span><span class="n">QMainWindow</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Parent</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c"># connect the open and colormap menu items</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actionFID</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openFID</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actionColor_Maps</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">setCMaps</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actionConfigureFilters</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filtConfigure</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actionFID</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_openFID</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actionColor_Maps</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_setCMaps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actionConfigureFilters</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_filtConfigure</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actionKspace</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kspace</span><span class="o">.</span><span class="n">setContrast</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actionKspace_Phase</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kspacePhase</span><span class="o">.</span><span class="n">setContrast</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actionMagnitude</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">setContrast</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actionPhase_Map</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phaseImage</span><span class="o">.</span><span class="n">setContrast</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actionExit</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exitprog</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actionExit</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exitProg</span><span class="p">)</span>
         <span class="c"># Connect the show/hide control for the sub-windows</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actionData_Explorer</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataExplorerToggle</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actionMagnitude_Image</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImageToggle</span><span class="p">)</span>
@@ -117,10 +145,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">kspacePhase</span><span class="o">.</span><span class="n">clearMarks</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">clearKspaceMarkers</span><span class="p">)</span>
 
         <span class="c"># Connect the click signals from the plots</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plotClick</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">phaseImage</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plotClick</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">kspace</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plotClick</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">kspacePhase</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plotClick</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plotClick</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phaseImage</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plotClick</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kspace</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plotClick</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kspacePhase</span><span class="o">.</span><span class="n">setMark</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plotClick</span><span class="p">)</span>
 
         <span class="c"># Default to not showing a few subwindows</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataExplorerDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
@@ -131,10 +159,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">phaseImage</span><span class="o">.</span><span class="n">toggleMask</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maskPhase</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">maskable</span> <span class="o">=</span> <span class="bp">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">toggleMask</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maskImage</span><span class="p">)</span>
-
+</div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
-<div class="viewcode-block" id="MainWindow.openFID"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.openFID">[docs]</a>    <span class="k">def</span> <span class="nf">openFID</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Called to open a Varian FID file &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MainWindow._openFID"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow._openFID">[docs]</a>    <span class="k">def</span> <span class="nf">_openFID</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that launches the files selector to open a Varian FID file</span>
+<span class="sd">        </span>
+<span class="sd">        Selecting the top level *.fid folder will open it correctly, loading</span>
+<span class="sd">        both the image data and the procpar file.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c"># launch the folder selection dialog</span>
         <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;Windows&#39;</span><span class="p">:</span>
             <span class="n">home</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;USERPROFILE&#39;</span><span class="p">]</span>
@@ -159,8 +192,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">updateAll</span><span class="p">()</span>
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
-<div class="viewcode-block" id="MainWindow.filtConfigure"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.filtConfigure">[docs]</a>    <span class="k">def</span> <span class="nf">filtConfigure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Open the Filter configuration window &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MainWindow._filtConfigure"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow._filtConfigure">[docs]</a>    <span class="k">def</span> <span class="nf">_filtConfigure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that opens the Filter configuration window &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span> <span class="o">=</span> <span class="n">FilterConfig</span><span class="p">(</span><span class="n">Dim</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">),</span>
                                       <span class="n">FilterStack</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filterStack</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">exec_</span><span class="p">():</span>
@@ -168,8 +201,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">updateAll</span><span class="p">()</span>
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
-<div class="viewcode-block" id="MainWindow.setCMaps"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.setCMaps">[docs]</a>    <span class="k">def</span> <span class="nf">setCMaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Open the Color Map Configuration window&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MainWindow._setCMaps"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow._setCMaps">[docs]</a>    <span class="k">def</span> <span class="nf">_setCMaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that opens the Color Map Configuration window&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span> <span class="o">=</span> <span class="n">startCMPUI</span><span class="o">.</span><span class="n">startCMPUI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CMaps</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">exec_</span><span class="p">():</span>  <span class="c"># on exit, set the new color maps</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">CMaps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subwindow</span><span class="o">.</span><span class="n">CMaps</span>
@@ -177,7 +210,7 @@
 </div>
 <div class="viewcode-block" id="MainWindow.updateAll"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.updateAll">[docs]</a>    <span class="k">def</span> <span class="nf">updateAll</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Refresh all of the displays with the current data and color maps</span>
+<span class="sd">        Refreshes all of the displays with the current data and color maps</span>
 <span class="sd">        as well as applying the filter stack.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -204,7 +237,7 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 <div class="viewcode-block" id="MainWindow.dataExplorerToggle"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.dataExplorerToggle">[docs]</a>    <span class="k">def</span> <span class="nf">dataExplorerToggle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to toggle the data explorer display&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that toggles the data explorer display&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataExplorerDock</span><span class="o">.</span><span class="n">isVisible</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataExplorerDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -212,7 +245,7 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
 <div class="viewcode-block" id="MainWindow.magnitudeImageToggle"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.magnitudeImageToggle">[docs]</a>    <span class="k">def</span> <span class="nf">magnitudeImageToggle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to toggle the image display&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that toggles the image display&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeDock</span><span class="o">.</span><span class="n">isVisible</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -220,7 +253,7 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
 <div class="viewcode-block" id="MainWindow.phaseImageToggle"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.phaseImageToggle">[docs]</a>    <span class="k">def</span> <span class="nf">phaseImageToggle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to toggle the phase display&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that toggles the phase display&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phaseDock</span><span class="o">.</span><span class="n">isVisible</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">phaseDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -228,7 +261,7 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
 <div class="viewcode-block" id="MainWindow.kspaceToggle"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.kspaceToggle">[docs]</a>    <span class="k">def</span> <span class="nf">kspaceToggle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to toggle the k-space display&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that toggles the k-space display&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kspaceDock</span><span class="o">.</span><span class="n">isVisible</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kspaceDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -236,15 +269,15 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
 <div class="viewcode-block" id="MainWindow.kphaseToggle"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.kphaseToggle">[docs]</a>    <span class="k">def</span> <span class="nf">kphaseToggle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to toggle the k-space phase display&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that toggles the k-space phase display&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kspacePhaseDock</span><span class="o">.</span><span class="n">isVisible</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kspacePhaseDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kspacePhaseDock</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-<div class="viewcode-block" id="MainWindow.plotClick"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.plotClick">[docs]</a>    <span class="k">def</span> <span class="nf">plotClick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> <span class="n">DataPoint</span><span class="p">,</span> <span class="n">PlotPoint</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Click handling to place markers on paired plots&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MainWindow._plotClick"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow._plotClick">[docs]</a>    <span class="k">def</span> <span class="nf">_plotClick</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> <span class="n">DataPoint</span><span class="p">,</span> <span class="n">PlotPoint</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that handles clicks to place markers on paired plots&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">Event</span><span class="o">.</span><span class="n">canvas</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">iMag</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">[</span><span class="n">DataPoint</span><span class="p">])))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">iPhase</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">[</span><span class="n">DataPoint</span><span class="p">])))</span>
@@ -267,7 +300,7 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 <div class="viewcode-block" id="MainWindow.clearImageMarkers"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.clearImageMarkers">[docs]</a>    <span class="k">def</span> <span class="nf">clearImageMarkers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to clear all markers from the image space plots &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that clears all markers from the image space plots &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">clearMarkers</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">phaseImage</span><span class="o">.</span><span class="n">clearMarkers</span><span class="p">()</span>
 
@@ -276,7 +309,7 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 <div class="viewcode-block" id="MainWindow.clearKspaceMarkers"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.clearKspaceMarkers">[docs]</a>    <span class="k">def</span> <span class="nf">clearKspaceMarkers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to clear all markers from the k-space plots &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that clears all markers from the k-space plots &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kspace</span><span class="o">.</span><span class="n">clearMarkers</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kspacePhase</span><span class="o">.</span><span class="n">clearMarkers</span><span class="p">()</span>
 
@@ -285,7 +318,7 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
 <div class="viewcode-block" id="MainWindow.maskPhase"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.maskPhase">[docs]</a>    <span class="k">def</span> <span class="nf">maskPhase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Toggle the masking of the phase map &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that toggles the mask for the phase map &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phaseImage</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">phaseImage</span><span class="o">.</span><span class="n">setMask</span><span class="p">(</span><span class="n">Mask</span><span class="o">=</span><span class="n">filt</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -293,15 +326,15 @@
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">()</span>
 <div class="viewcode-block" id="MainWindow.maskImage"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.maskImage">[docs]</a>    <span class="k">def</span> <span class="nf">maskImage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Toggle the masking of the phase map &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that toggles the mask for the image &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">setMask</span><span class="p">(</span><span class="n">Mask</span><span class="o">=</span><span class="n">filt</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">magnitudeImage</span><span class="o">.</span><span class="n">removeMask</span><span class="p">()</span>
 </div>
     <span class="nd">@QtCore.pyqtSlot</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-<div class="viewcode-block" id="MainWindow.exitprog"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.exitprog">[docs]</a>    <span class="k">def</span> <span class="nf">exitprog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Call back to exit the program&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MainWindow.exitProg"><a class="viewcode-back" href="../code.html#mr_magic.MainWindow.exitProg">[docs]</a>    <span class="k">def</span> <span class="nf">exitProg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; QT slot that exits the program&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 </div></div>
@@ -310,6 +343,14 @@
     <span class="n">myapp</span> <span class="o">=</span> <span class="n">MainWindow</span><span class="p">()</span>
     <span class="n">myapp</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span>
+    
+<span class="c"># Big Fat TODO list of DOOM! DOOM I TELL YOU!</span>
+<span class="c">#: .. todo:: Add procpar explorer</span>
+<span class="c">#: .. todo:: Add GE pFile importer</span>
+<span class="c">#: .. todo:: Add SNR comutation</span>
+<span class="c">#: .. todo:: Add configuration window</span>
+<span class="c">#: .. todo:: Add save configuration</span>
+    
 </pre></div>
 
           </div>
@@ -349,7 +390,6 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, Neal Hollingsworth.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
